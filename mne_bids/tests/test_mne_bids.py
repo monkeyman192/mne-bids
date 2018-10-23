@@ -104,10 +104,9 @@ def test_kit():
     event_id = dict(cond=1)
 
     raw_to_bids(subject_id=subject_id, session_id=session_id, run=run,
-                task=task, acquisition=acq, raw_file=raw_fname,
-                events_data=events_fname, event_id=event_id, hpi=hpi_fname,
-                electrode=electrode_fname, hsp=headshape_fname,
-                output_path=output_path, overwrite=False)
+                task=task, raw_file=raw_fname, events_data=events_fname,
+                event_id=event_id, hpi=hpi_fname, electrode=electrode_fname,
+                hsp=headshape_fname, output_path=output_path, overwrite=False)
     cmd = ['bids-validator', output_path]
     run_subprocess(cmd, shell=shell)
     assert op.exists(op.join(output_path, 'participants.tsv'))
@@ -115,7 +114,7 @@ def test_kit():
     # ensure the channels file has no STI 014 channel:
     channels_tsv = make_bids_filename(
         subject=subject_id, session=session_id, task=task, run=run,
-        suffix='channels.tsv', acquisition=acq,
+        suffix='channels.tsv',
         prefix=op.join(output_path, 'sub-01/ses-01/meg'))
     df = pd.read_csv(channels_tsv, sep='\t')
     assert not ('STI 014' in df['name'].values)
@@ -123,21 +122,26 @@ def test_kit():
     # ensure the marker file is produced in the right place
     raw_folder = make_bids_filename(
         subject=subject_id, session=session_id, task=task, run=run,
-        acquisition=acq, suffix='%s' % 'meg')
+        suffix='%s' % 'meg')
     marker_fname = make_bids_filename(
         subject=subject_id, session=session_id, task=task, run=run,
-        acquisition=acq, suffix='markers.sqd',
+        suffix='markers.sqd',
         prefix=os.path.join(output_path, 'sub-01/ses-01/meg', raw_folder))
     assert op.exists(marker_fname)
 
-    # check for error if there are multiple marker coils specified
+    raw_to_bids(subject_id=subject_id, session_id=session_id, run=run,
+                task=task, raw_file=raw_fname, events_data=events_fname,
+                event_id=event_id, hpi=[hpi_fname, hpi_fname],
+                electrode=electrode_fname, hsp=headshape_fname,
+                output_path=output_path, overwrite=True)
+
+    # check for error if there are 3 marker coils specified
     with pytest.raises(ValueError):
         raw_to_bids(subject_id=subject_id, session_id=session_id, run=run,
-                    task=task, acquisition=acq, raw_file=raw_fname,
-                    events_data=events_fname, event_id=event_id,
-                    hpi=[hpi_fname, hpi_fname], electrode=electrode_fname,
-                    hsp=headshape_fname, output_path=output_path,
-                    overwrite=True)
+                    task=task, raw_file=raw_fname, events_data=events_fname,
+                    event_id=event_id, hpi=[hpi_fname, hpi_fname, hpi_fname],
+                    electrode=electrode_fname, hsp=headshape_fname,
+                    output_path=output_path, overwrite=True)
 
 
 def test_ctf():

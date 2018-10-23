@@ -737,14 +737,36 @@ def raw_to_bids(subject_id, task, raw_file, output_path, session_id=None,
     # KIT data requires the marker file to be copied over too
     if hpi is not None:
         if isinstance(hpi, list):
-            # No currently accepted way to name multiple marker files. See:
-            # https://github.com/bids-standard/bids-specification/issues/45
-            raise ValueError('Only single marker coils supported currently')
-        _, marker_ext = _parse_ext(hpi)
-        marker_fname = make_bids_filename(
-            subject=subject_id, session=session_id, task=task, run=run,
-            acquisition=acquisition, suffix='markers%s' % marker_ext,
-            prefix=os.path.join(data_path, raw_folder))
-        sh.copyfile(hpi, marker_fname)
+            if len(hpi) > 2:
+                raise ValueError('HPI list can only consist of up to two '
+                                 'values')
+            # Remove a previously existing marker coil file with the same name
+            # (without the acquisition parameters) if it exists.
+            _, marker_ext = _parse_ext(hpi[0])
+            marker_fname = make_bids_filename(
+                subject=subject_id, session=session_id, task=task, run=run,
+                suffix='markers%s' % marker_ext,
+                prefix=os.path.join(data_path, raw_folder))
+            if os.path.exists(marker_fname):
+                if not overwrite:
+                    raise OSError(errno.EEXIST, '"%s" already exists. Please'
+                                  'set overwrite to True.' % marker_fname)
+                os.remove(marker_fname)
+            # Write the marker files with the appropriate acq parameters
+            acq_names = {0: 'pre', 1: 'post'}
+            for i, hpi_fname in enumerate(hpi):
+                _, marker_ext = _parse_ext(hpi_fname)
+                marker_fname = make_bids_filename(
+                    subject=subject_id, session=session_id, task=task, run=run,
+                    acquisition=acq_names[i], suffix='markers%s' % marker_ext,
+                    prefix=os.path.join(data_path, raw_folder))
+                sh.copyfile(hpi_fname, marker_fname)
+        else:
+            _, marker_ext = _parse_ext(hpi)
+            marker_fname = make_bids_filename(
+                subject=subject_id, session=session_id, task=task, run=run,
+                suffix='markers%s' % marker_ext,
+                prefix=os.path.join(data_path, raw_folder))
+            sh.copyfile(hpi, marker_fname)
 
     return output_path
