@@ -324,7 +324,7 @@ def _write_tsv(fname, df, overwrite=False, verbose=False):
     if op.exists(fname) and not overwrite:
         raise OSError(errno.EEXIST, '"%s" already exists. Please set '
                       'overwrite to True.' % fname)
-    df.to_csv(fname, sep='\t', index=False, na_rep='n/a')
+    df.to_tsv(fname)
 
     if verbose:
         print(os.linesep + "Writing '%s'..." % fname + os.linesep)
