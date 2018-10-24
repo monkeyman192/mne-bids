@@ -275,7 +275,6 @@ def _participants_tsv(raw, subject_id, group, fname, overwrite=False,
                           'True.' % subject_id)
         # otherwise add the new data
         orig_df.append(df, 'participant_id')
-        #df = df.sort_values(by='participant_id')
         df = orig_df
 
     # overwrite is forced to True as all issues with overwrite == False have
@@ -326,7 +325,6 @@ def _scans_tsv(raw, raw_fname, fname, overwrite=False, verbose=True):
                           'True.' % raw_fname)
         # otherwise add the new data
         orig_df.append(df, 'filename')
-        #df = df.sort_values(by='acq_time')
         df = orig_df
 
     # overwrite is forced to True as all issues with overwrite == False have
