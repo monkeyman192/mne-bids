@@ -20,7 +20,7 @@ from mne.utils import _TempDir, run_subprocess
 from mne.io.constants import FIFF
 
 from mne_bids import raw_to_bids, make_bids_filename, make_bids_folders
-from mne_bids.dataframe import MockDataFrame
+from mne_bids.dataframe_func import column_data, from_tsv
 
 base_path = op.join(op.dirname(mne.__file__), 'io')
 subject_id = '01'
@@ -117,8 +117,8 @@ def test_kit():
         subject=subject_id, session=session_id, task=task, run=run,
         suffix='channels.tsv', acquisition=acq,
         prefix=op.join(output_path, 'sub-01/ses-01/meg'))
-    df = MockDataFrame.from_tsv(channels_tsv)
-    assert 'STI 014' not in df['name']
+    df = from_tsv(channels_tsv)
+    assert 'STI 014' not in column_data(df, 'name')
 
     # ensure the marker file is produced in the right place
     raw_folder = make_bids_filename(
@@ -230,15 +230,15 @@ def test_edf():
         subject=subject_id, session=session_id, task=task, run=run,
         suffix='channels.tsv', acquisition=acq,
         prefix=op.join(output_path, 'sub-01/ses-01/eeg'))
-    df = MockDataFrame.from_tsv(channels_tsv)
-    assert 'ElectroMyoGram' in df['description']
+    df = from_tsv(channels_tsv)
+    assert 'ElectroMyoGram' in column_data(df, 'description')
 
     # check that the scans list contains two scans
     scans_tsv = make_bids_filename(
         subject=subject_id, session=session_id, suffix='scans.tsv',
         prefix=op.join(output_path, 'sub-01/ses-01'))
-    df = MockDataFrame.from_tsv(scans_tsv)
-    assert df.data.shape[0] == 2
+    df = from_tsv(scans_tsv)
+    assert df.shape[0] == 3     # 2+1 for the header row
 
 
 def test_bdf():
